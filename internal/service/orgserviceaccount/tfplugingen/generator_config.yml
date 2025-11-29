@@ -1,0 +1,23 @@
+provider:
+  name: mongodbatlas
+
+# TODO: Endpoints from Atlas Admin API must be specified for schema and model generation. Singular or plural data sources can be removed if not used.
+
+resources:
+  org_service_account:
+    read:
+      path: /api/atlas/v2/orgs/{orgId}/serviceAccounts/{clientId}
+      method: GET
+    create:
+      path: /api/atlas/v2/orgs/{orgId}/serviceAccounts
+      method: POST
+
+data_sources:
+  org_service_account:
+    read:
+      path: /api/atlas/v2/orgs/{orgId}/serviceAccounts/{clientId}
+      method: GET
+  org_service_accounts:
+    read:
+      path: /api/atlas/v2/orgs/{orgId}/serviceAccounts
+      method: GET
