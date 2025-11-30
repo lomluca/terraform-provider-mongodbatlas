@@ -10,8 +10,6 @@ import (
 	"github.com/mongodb/terraform-provider-mongodbatlas/internal/common/conversion"
 	"github.com/mongodb/terraform-provider-mongodbatlas/internal/common/validate"
 	"github.com/mongodb/terraform-provider-mongodbatlas/internal/config"
-
-	"go.mongodb.org/atlas-sdk/v20250312010/admin"
 )
 
 const resourceName = "org_service_account"
@@ -38,24 +36,22 @@ func (r *rs) Schema(ctx context.Context, req resource.SchemaRequest, resp *resou
 
 func (r *rs) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan TFModel
-	var roles []string
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(plan.Roles.ElementsAs(ctx, &roles, false)...)
+	atlasReq, diag := NewAtlasReq(ctx, &plan)
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
 
 	orgID := plan.OrgId.ValueString()
 
 	connV2 := r.Client.AtlasV2
-	orgServiceAccountReq, _, err := connV2.ServiceAccountsApi.CreateOrgServiceAccount(ctx, orgID, &admin.OrgServiceAccountRequest{
-		Name:                    plan.Name.ValueString(),
-		Description:             plan.Description.ValueString(),
-		SecretExpiresAfterHours: int(plan.SecretExpiresAfterHours.ValueInt64()),
-		Roles:                   roles,
-	}).Execute()
+	orgServiceAccountReq, _, err := connV2.ServiceAccountsApi.CreateOrgServiceAccount(ctx, orgID, atlasReq).Execute()
 
 	if err != nil {
 		resp.Diagnostics.AddError("error creating resource", err.Error())
@@ -102,25 +98,24 @@ func (r *rs) Read(ctx context.Context, req resource.ReadRequest, resp *resource.
 
 func (r *rs) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan TFModel
-	var roles []string
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(plan.Roles.ElementsAs(ctx, &roles, false)...)
+	atlasUpdateReq, diag := NewAtlasUpdateReq(ctx, &plan)
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
 
 	orgID := plan.OrgId.ValueString()
 	saID := plan.ClientId.ValueString()
 
 	connV2 := r.Client.AtlasV2
 
-	orgServiceAccountReq, _, err := connV2.ServiceAccountsApi.UpdateOrgServiceAccount(ctx, saID, orgID, &admin.OrgServiceAccountUpdateRequest{
-		Name:        plan.Name.ValueStringPointer(),
-		Description: plan.Description.ValueStringPointer(),
-		Roles:       &roles,
-	}).Execute()
+	orgServiceAccountReq, _, err := connV2.ServiceAccountsApi.UpdateOrgServiceAccount(ctx, saID, orgID, atlasUpdateReq).Execute()
 
 	if err != nil {
 		resp.Diagnostics.AddError("error updating resource", err.Error())

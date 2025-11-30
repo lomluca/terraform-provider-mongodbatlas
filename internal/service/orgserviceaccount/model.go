@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/atlas-sdk/v20250312010/admin"
 )
 
-// TODO: `ctx` parameter and `diags` return value can be removed if tf schema has no complex data types (e.g., schema.ListAttribute, schema.SetAttribute)
 func NewTFModel(ctx context.Context, apiResp *admin.OrgServiceAccount) (*TFModel, diag.Diagnostics) {
 	roles, diags := types.SetValueFrom(ctx, types.StringType, *(apiResp.Roles))
 	if diags.HasError() {
@@ -31,7 +30,7 @@ func NewTFModel(ctx context.Context, apiResp *admin.OrgServiceAccount) (*TFModel
 func NewTFSecrets(ctx context.Context, input *[]admin.ServiceAccountSecret) []TFSecretsModel {
 	var nilPointer *[]admin.ServiceAccountSecret
 	if input == nilPointer {
-		return []TFSecretsModel{}
+		return nil
 	}
 	tfSecrets := make([]TFSecretsModel, len(*input))
 	for i, item := range *input {
@@ -45,4 +44,33 @@ func NewTFSecrets(ctx context.Context, input *[]admin.ServiceAccountSecret) []TF
 		}
 	}
 	return tfSecrets
+}
+
+func NewAtlasReq(ctx context.Context, plan *TFModel) (*admin.OrgServiceAccountRequest, diag.Diagnostics) {
+	var roles []string
+	diags := plan.Roles.ElementsAs(ctx, &roles, false)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return &admin.OrgServiceAccountRequest{
+		Name:                    plan.Name.ValueString(),
+		Description:             plan.Description.ValueString(),
+		SecretExpiresAfterHours: int(plan.SecretExpiresAfterHours.ValueInt64()),
+		Roles:                   roles,
+	}, nil
+}
+
+func NewAtlasUpdateReq(ctx context.Context, plan *TFModel) (*admin.OrgServiceAccountUpdateRequest, diag.Diagnostics) {
+	var roles []string
+	diags := plan.Roles.ElementsAs(ctx, &roles, false)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return &admin.OrgServiceAccountUpdateRequest{
+		Name:        plan.Name.ValueStringPointer(),
+		Description: plan.Description.ValueStringPointer(),
+		Roles:       &roles,
+	}, nil
 }
