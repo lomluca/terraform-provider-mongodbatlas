@@ -28,6 +28,10 @@ var (
 	fullJSON string
 	//go:embed testdata/no_secrets.json
 	noSecretsJSON string
+	//go:embed testdata/new_request.json
+	newRequestJSON string
+	//go:embed testdata/new_update_request.json
+	newUpdateRequestJSON string
 )
 
 type sdkToTFModelTestCase struct {
@@ -43,6 +47,26 @@ func parseSDKModel(t *testing.T, sdkRespJSON string) *admin.OrgServiceAccount {
 		t.Fatalf("failed to unmarshal sdk response: %s", err)
 	}
 	return &SDKModel
+}
+
+func parseSDKRequest(t *testing.T, sdkReqJSON string) *admin.OrgServiceAccountRequest {
+	t.Helper()
+	var SDKRequest admin.OrgServiceAccountRequest
+	err := json.Unmarshal([]byte(sdkReqJSON), &SDKRequest)
+	if err != nil {
+		t.Fatalf("failed to unmarshal sdk response: %s", err)
+	}
+	return &SDKRequest
+}
+
+func parseSDKUpdateRequest(t *testing.T, sdkReqJSON string) *admin.OrgServiceAccountUpdateRequest {
+	t.Helper()
+	var SDKRequest admin.OrgServiceAccountUpdateRequest
+	err := json.Unmarshal([]byte(sdkReqJSON), &SDKRequest)
+	if err != nil {
+		t.Fatalf("failed to unmarshal sdk response: %s", err)
+	}
+	return &SDKRequest
 }
 
 func buildTFModel(ctx context.Context, addSecrets bool) *orgserviceaccount.TFModel {
@@ -101,22 +125,57 @@ func TestOrgServiceAccountSDKToTFModel(t *testing.T) {
 	}
 }
 
-type tfToSDKModelTestCase struct {
-	tfModel        *orgserviceaccount.TFModel
-	expectedSDKReq *admin.OrgServiceAccount
-}
+func TestNewAtlasReq(t *testing.T) {
+	newRequestSDK := parseSDKRequest(t, newRequestJSON)
+	roles, _ := types.SetValueFrom(t.Context(), types.StringType, []string{"ORG_MEMBER"})
 
-func TestOrgServiceAccountTFModelToSDK(t *testing.T) {
-	testCases := map[string]tfToSDKModelTestCase{
-		"Complete TF state": {
-			tfModel:        &orgserviceaccount.TFModel{},
-			expectedSDKReq: &admin.OrgServiceAccount{},
+	testCases := map[string]struct {
+		tfModel        *orgserviceaccount.TFModel
+		expectedSDKReq *admin.OrgServiceAccountRequest
+	}{
+		"Create": {
+			tfModel: &orgserviceaccount.TFModel{
+				Name:                    types.StringValue(name),
+				SecretExpiresAfterHours: types.Int64Value(8),
+				Description:             types.StringValue(description),
+				Roles:                   roles,
+			},
+			expectedSDKReq: newRequestSDK,
 		},
 	}
 
 	for testName, tc := range testCases {
 		t.Run(testName, func(t *testing.T) {
 			apiReqResult, diags := orgserviceaccount.NewAtlasReq(context.Background(), tc.tfModel)
+			if diags.HasError() {
+				t.Errorf("unexpected errors found: %s", diags.Errors()[0].Summary())
+			}
+			assert.Equal(t, tc.expectedSDKReq, apiReqResult, "created sdk model did not match expected output")
+		})
+	}
+}
+
+func TestNewAtlasUpdateReq(t *testing.T) {
+	newUpdateRequestSDK := parseSDKUpdateRequest(t, newUpdateRequestJSON)
+	roles, _ := types.SetValueFrom(t.Context(), types.StringType, []string{"ORG_MEMBER"})
+
+	testCases := map[string]struct {
+		tfModel        *orgserviceaccount.TFModel
+		expectedSDKReq *admin.OrgServiceAccountUpdateRequest
+	}{
+		"Update": {
+			tfModel: &orgserviceaccount.TFModel{
+				Name:        types.StringValue(name),
+				Description: types.StringValue(description),
+				Roles:       roles,
+			},
+			expectedSDKReq: newUpdateRequestSDK,
+		},
+	}
+
+	for testName, tc := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			apiReqResult, diags := orgserviceaccount.NewAtlasUpdateReq(context.Background(), tc.tfModel)
 			if diags.HasError() {
 				t.Errorf("unexpected errors found: %s", diags.Errors()[0].Summary())
 			}

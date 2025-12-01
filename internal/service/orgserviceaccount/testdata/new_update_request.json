@@ -1,0 +1,7 @@
+{
+  "description": "Service account to test the tf resource",
+  "name": "sa-test-org-owner",
+  "roles": [
+    "ORG_MEMBER"
+  ]
+}
