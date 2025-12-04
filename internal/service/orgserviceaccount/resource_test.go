@@ -20,8 +20,8 @@ const dataSourceName = "data.mongodbatlas_org_service_account.test"
 func TestAccOrgServiceAccount_basic(t *testing.T) {
 	orgID := os.Getenv("MONGODB_ATLAS_ORG_ID")
 	name := acc.RandomName()
-	roles := []string{"GROUP_OWNER"}
-	updatedRoles := []string{"GROUP_OWNER", "ORG_MEMBER"}
+	roles := []string{"ORG_READ_ONLY"}
+	updatedRoles := []string{"ORG_READ_ONLY", "ORG_MEMBER"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acc.PreCheckBasic(t) },
@@ -54,7 +54,7 @@ func orgServiceAccountConfig(orgID, name, description string, roles []string) st
 			org_id                     = %[1]q
 			name                       = %[2]q
 			description                = %[3]q
-			roles                      = [%[4]q]
+			roles                      = [%[4]s]
 			secret_expires_after_hours = 12
 		}
 			

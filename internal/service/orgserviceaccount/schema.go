@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -105,14 +106,14 @@ func DataSourceSchema() dsschema.Schema {
 }
 
 type TFModel struct {
-	Roles                   types.Set        `tfsdk:"roles"`
-	ClientId                types.String     `tfsdk:"client_id" autogen:"omitjson"`
-	CreatedAt               types.String     `tfsdk:"created_at" autogen:"omitjson"`
-	Description             types.String     `tfsdk:"description"`
-	Name                    types.String     `tfsdk:"name"`
-	OrgId                   types.String     `tfsdk:"org_id" autogen:"omitjson"`
-	Secrets                 []TFSecretsModel `tfsdk:"secrets" autogen:"omitjson"`
-	SecretExpiresAfterHours types.Int64      `tfsdk:"secret_expires_after_hours" autogen:"omitjsonupdate"`
+	Roles                   types.Set    `tfsdk:"roles"`
+	ClientId                types.String `tfsdk:"client_id" autogen:"omitjson"`
+	CreatedAt               types.String `tfsdk:"created_at" autogen:"omitjson"`
+	Description             types.String `tfsdk:"description"`
+	Name                    types.String `tfsdk:"name"`
+	OrgId                   types.String `tfsdk:"org_id" autogen:"omitjson"`
+	Secrets                 types.Set    `tfsdk:"secrets" autogen:"omitjson"`
+	SecretExpiresAfterHours types.Int64  `tfsdk:"secret_expires_after_hours" autogen:"omitjsonupdate"`
 }
 type TFSecretsModel struct {
 	CreatedAt         types.String `tfsdk:"created_at" autogen:"omitjson"`
@@ -122,3 +123,12 @@ type TFSecretsModel struct {
 	MaskedSecretValue types.String `tfsdk:"masked_secret_value" autogen:"omitjson"`
 	Secret            types.String `tfsdk:"secret" autogen:"sensitive,omitjson"`
 }
+
+var SecretObjectType = types.ObjectType{AttrTypes: map[string]attr.Type{
+	"created_at":          types.StringType,
+	"expires_at":          types.StringType,
+	"id":                  types.StringType,
+	"last_used_at":        types.StringType,
+	"masked_secret_value": types.StringType,
+	"secret":              types.StringType,
+}}

@@ -15,7 +15,10 @@ func NewTFModel(ctx context.Context, apiResp *admin.OrgServiceAccount) (*TFModel
 		return nil, diags
 	}
 
-	secrets := NewTFSecrets(ctx, apiResp.Secrets)
+	secretsSet, diagnostic := types.SetValueFrom(ctx, SecretObjectType, NewTFSecrets(ctx, apiResp.Secrets))
+	if diagnostic.HasError() {
+		return nil, diagnostic
+	}
 
 	return &TFModel{
 		ClientId:    types.StringPointerValue(apiResp.ClientId),
@@ -23,7 +26,7 @@ func NewTFModel(ctx context.Context, apiResp *admin.OrgServiceAccount) (*TFModel
 		Description: types.StringPointerValue(apiResp.Description),
 		Name:        types.StringPointerValue(apiResp.Name),
 		Roles:       roles,
-		Secrets:     secrets,
+		Secrets:     secretsSet,
 	}, nil
 }
 

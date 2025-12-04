@@ -80,7 +80,7 @@ func buildTFModel(ctx context.Context, addSecrets bool) *orgserviceaccount.TFMod
 	}
 
 	if addSecrets == true {
-		tfModel.Secrets = []orgserviceaccount.TFSecretsModel{
+		tfModel.Secrets, _ = types.SetValueFrom(ctx, orgserviceaccount.SecretObjectType, []orgserviceaccount.TFSecretsModel{
 			{
 				CreatedAt:         types.StringValue(createdAt),
 				ExpiresAt:         types.StringValue(secretExpiresAt),
@@ -88,7 +88,7 @@ func buildTFModel(ctx context.Context, addSecrets bool) *orgserviceaccount.TFMod
 				LastUsedAt:        types.StringValue(secretLastUsedAt),
 				MaskedSecretValue: types.StringValue(secretMaskedSecretValue),
 			},
-		}
+		})
 	}
 
 	return &tfModel
