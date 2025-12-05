@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/mongodb/terraform-provider-mongodbatlas/internal/common/conversion"
 	"github.com/mongodb/terraform-provider-mongodbatlas/internal/common/validate"
 	"github.com/mongodb/terraform-provider-mongodbatlas/internal/config"
@@ -101,7 +102,19 @@ func (r *rs) Read(ctx context.Context, req resource.ReadRequest, resp *resource.
 
 	// api does not return 'orgID' and 'secret_expires_after_hours'
 	newOrgServiceAccountModel.OrgId = state.OrgId
-	newOrgServiceAccountModel.SecretExpiresAfterHours = state.SecretExpiresAfterHours
+	if state.SecretExpiresAfterHours.ValueInt64() == 0 {
+		// in case of import we should compute reading a secret expiration
+		var secrets = getOrgServiceAccountReq.Secrets
+		if len(*secrets) > 0 {
+			expirationHours := int64((*secrets)[0].ExpiresAt.Sub((*secrets)[0].CreatedAt).Hours())
+			newOrgServiceAccountModel.SecretExpiresAfterHours = types.Int64Value(expirationHours)
+		} else {
+			resp.Diagnostics.AddError("error computing secret_expires_after_hours", "secrets not found")
+			return
+		}
+	} else {
+		newOrgServiceAccountModel.SecretExpiresAfterHours = state.SecretExpiresAfterHours
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newOrgServiceAccountModel)...)
 }
