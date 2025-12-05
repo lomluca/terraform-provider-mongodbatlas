@@ -63,6 +63,11 @@ func (r *rs) Create(ctx context.Context, req resource.CreateRequest, resp *resou
 		resp.Diagnostics.Append(diags...)
 		return
 	}
+
+	// api does not return 'orgID' and 'secret_expires_after_hours'
+	newOrgServiceAccountModel.OrgId = plan.OrgId
+	newOrgServiceAccountModel.SecretExpiresAfterHours = plan.SecretExpiresAfterHours
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newOrgServiceAccountModel)...)
 }
 
@@ -93,6 +98,11 @@ func (r *rs) Read(ctx context.Context, req resource.ReadRequest, resp *resource.
 		resp.Diagnostics.Append(diags...)
 		return
 	}
+
+	// api does not return 'orgID' and 'secret_expires_after_hours'
+	newOrgServiceAccountModel.OrgId = state.OrgId
+	newOrgServiceAccountModel.SecretExpiresAfterHours = state.SecretExpiresAfterHours
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newOrgServiceAccountModel)...)
 }
 
@@ -127,6 +137,11 @@ func (r *rs) Update(ctx context.Context, req resource.UpdateRequest, resp *resou
 		resp.Diagnostics.Append(diags...)
 		return
 	}
+
+	// api does not return 'orgID' and 'secret_expires_after_hours'
+	newOrgServiceAccountModel.OrgId = plan.OrgId
+	newOrgServiceAccountModel.SecretExpiresAfterHours = plan.SecretExpiresAfterHours
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newOrgServiceAccountModel)...)
 }
 

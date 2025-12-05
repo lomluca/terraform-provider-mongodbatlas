@@ -66,7 +66,7 @@ func orgServiceAccountConfig(orgID, name, description string, roles []string) st
 }
 
 func orgServiceAccountAttributeChecks(name, description string, roles []string) resource.TestCheckFunc {
-	attrsSet := []string{"team_id"}
+	attrsSet := []string{"client_id"}
 	attrsMap := map[string]string{
 		"name":        name,
 		"description": description,
@@ -113,6 +113,6 @@ func checkDestroyOrgServiceAccount(s *terraform.State) error {
 func checkOrgServiceAccountImportStateIDFunc(resourceName string) func(s *terraform.State) (string, error) {
 	return func(s *terraform.State) (string, error) {
 		attrs := s.RootModule().Resources[resourceName].Primary.Attributes
-		return attrs["client_id"], nil
+		return fmt.Sprintf("%s-%s", attrs["org_id"], attrs["client_id"]), nil
 	}
 }

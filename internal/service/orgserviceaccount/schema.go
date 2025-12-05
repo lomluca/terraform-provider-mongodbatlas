@@ -9,6 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -21,10 +24,16 @@ func ResourceSchema() schema.Schema {
 			"client_id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The Client ID of the Service Account.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"created_at": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The date that the Service Account was created on. This parameter expresses its value in the ISO 8601 timestamp format in UTC.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Required:            true,
@@ -65,6 +74,9 @@ func ResourceSchema() schema.Schema {
 			"secrets": schema.SetNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "A list of secrets associated with the specified Service Account.",
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"created_at": schema.StringAttribute{
@@ -107,21 +119,21 @@ func DataSourceSchema() dsschema.Schema {
 
 type TFModel struct {
 	Roles                   types.Set    `tfsdk:"roles"`
-	ClientId                types.String `tfsdk:"client_id" autogen:"omitjson"`
-	CreatedAt               types.String `tfsdk:"created_at" autogen:"omitjson"`
+	ClientId                types.String `tfsdk:"client_id"`
+	CreatedAt               types.String `tfsdk:"created_at"`
 	Description             types.String `tfsdk:"description"`
 	Name                    types.String `tfsdk:"name"`
-	OrgId                   types.String `tfsdk:"org_id" autogen:"omitjson"`
-	Secrets                 types.Set    `tfsdk:"secrets" autogen:"omitjson"`
-	SecretExpiresAfterHours types.Int64  `tfsdk:"secret_expires_after_hours" autogen:"omitjsonupdate"`
+	OrgId                   types.String `tfsdk:"org_id"`
+	Secrets                 types.Set    `tfsdk:"secrets"`
+	SecretExpiresAfterHours types.Int64  `tfsdk:"secret_expires_after_hours"`
 }
 type TFSecretsModel struct {
-	CreatedAt         types.String `tfsdk:"created_at" autogen:"omitjson"`
-	ExpiresAt         types.String `tfsdk:"expires_at" autogen:"omitjson"`
-	Id                types.String `tfsdk:"id" autogen:"omitjson"`
-	LastUsedAt        types.String `tfsdk:"last_used_at" autogen:"omitjson"`
-	MaskedSecretValue types.String `tfsdk:"masked_secret_value" autogen:"omitjson"`
-	Secret            types.String `tfsdk:"secret" autogen:"sensitive,omitjson"`
+	CreatedAt         types.String `tfsdk:"created_at"`
+	ExpiresAt         types.String `tfsdk:"expires_at"`
+	Id                types.String `tfsdk:"id"`
+	LastUsedAt        types.String `tfsdk:"last_used_at"`
+	MaskedSecretValue types.String `tfsdk:"masked_secret_value"`
+	Secret            types.String `tfsdk:"secret"`
 }
 
 var SecretObjectType = types.ObjectType{AttrTypes: map[string]attr.Type{
