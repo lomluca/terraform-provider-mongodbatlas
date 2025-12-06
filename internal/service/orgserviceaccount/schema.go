@@ -52,8 +52,7 @@ func ResourceSchema() schema.Schema {
 				},
 			},
 			"org_id": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "Unique 24-hexadecimal digit string that identifies the organization that contains your projects. Use the [/orgs](#tag/Organizations/operation/listOrganizations) endpoint to retrieve all organizations to which the authenticated user has access.",
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexp.MustCompile("^([a-f0-9]{24})$"), ""),
